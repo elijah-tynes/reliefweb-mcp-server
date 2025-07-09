@@ -8,6 +8,7 @@ public class ReliefWebTools
 {
     [McpServerTool, Description(
 @"Retrieves update and situation reports curated from ReliefWeb.
+When specifying a country keyword, the input should be converted to its 3-letter ISO 3166-1 alpha-3 code for querying.
 If no keywords are provided, a list of reports sorted by date is provided.
 Each result includes: Report title, country of report, iso3 code of the report, disaster related to the report (if applicable), theme of the report, date the report was created, source of the report, and ReliefWeb report URL for more info on the report.")]
     public async Task<string> GetReports(ReliefWebService reliefWebService, string[]? keywords = null, int numResults = 20)
@@ -18,6 +19,7 @@ Each result includes: Report title, country of report, iso3 code of the report, 
 
     [McpServerTool, Description(
 @"Retrieves information related to disasters.
+When specifying a country keyword, the input should be converted to its 3-letter ISO 3166-1 alpha-3 code for querying.
 If no keywords are provided, a list of disasters sorted by date is provided.
 Each result includes: Name of the incident, glide identifier of the incident, country of the incident, iso3 code of the incident, type of incident, date of the incident, and ReliefWeb URL for more info on the incident.")]
     public async Task<string> GetDisasters(ReliefWebService reliefWebService, string[]? keywords = null, int numResults = 20)
@@ -28,6 +30,7 @@ Each result includes: Name of the incident, glide identifier of the incident, co
 
     [McpServerTool, Description(
 @"Retrieves ReliefWeb humanitarian jobs and volunteer opportunities.
+When specifying a country keyword, the input should be converted to its 3-letter ISO 3166-1 alpha-3 code for querying.
 If no keywords are provided, a list of jobs sorted by date is provided.
 Each result includes: Title of the opportunity, country of the role, city of the role (if applicable), iso3 code of the role, type of role, career category of the role, date the role application opened, date the role appplication closes, required experience for the role, how to apply for the role, and the ReliefWeb URL for more information on the role.")]
     public async Task<string> GetJobs(ReliefWebService reliefWebService, [Description("When specifying a country, use 3-letter ISO 3166-1 alpha-3 code")] string[]? keywords = null, int numResults = 20)
@@ -38,6 +41,7 @@ Each result includes: Title of the opportunity, country of the role, city of the
 
     [McpServerTool, Description(
 @"Retrieves training opportunities and courses for useful and necessary humanitarian skills.
+When specifying a country keyword, the input should be converted to its 3-letter ISO 3166-1 alpha-3 code for querying.
 If no keywords are provided, a list of trainings sorted by date is provided.
 Each result includes: Title of training, country of the training, city of the training, iso3 code of the training, career category of the training, cost of the training, date the training was created, how to register for the training, source of the training, type of training, language of the training, format of the training, and ReliefWeb URL for more information on the training.")]
     public async Task<string> GetTrainings(ReliefWebService reliefWebService, string[]? keywords = null, int numResults = 20)

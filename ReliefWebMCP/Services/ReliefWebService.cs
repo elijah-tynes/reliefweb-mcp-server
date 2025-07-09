@@ -4,8 +4,13 @@ namespace ReliefWebMCP;
 
 public class ReliefWebService
 {
-    // Determine if MAX_REQUEST_SIZE was set by the user
-    private int? _maxRequestSize = int.TryParse(Environment.GetEnvironmentVariable("MAX_REQUEST_SIZE"), out var parsed) ? parsed : null;
+    // Extract optional request size environment variables for each MCP tool
+    private int? _reportsRequestSize = GetRequestSize("REPORTS_REQUEST_SIZE");
+    private int? _disastersRequestSize = GetRequestSize("DISASTERS_REQUEST_SIZE");
+    private int? _jobsRequestSize = GetRequestSize("JOBS_REQUEST_SIZE");
+    private int? _trainingsRequestSize = GetRequestSize("TRAININGS_REQUEST_SIZE");
+    private int? _blogsRequestSize = GetRequestSize("BLOGS_REQUEST_SIZE");
+    private int? _resourcesRequestSize = GetRequestSize("RESOURCES_REQUEST_SIZE");
 
     // HTTP client
     private HttpClient _httpClient;
@@ -22,28 +27,41 @@ public class ReliefWebService
         // Extract and format keywords, set to "*" if none provided
         string queryString = BuildQueryString(keywords);
 
-        // Env max request size or default set by LLM
-        int querySize = _maxRequestSize ?? numResults;
+        // Reports request size or default
+        int querySize = _reportsRequestSize ?? numResults;
+
+        // String builder for the reports endpoint
+        string BuildReportsEndpoint(string query) =>
+            $"https://api.reliefweb.int/v1/reports?" +
+            $"&query[fields][]=title" +
+            $"&query[value]={query}" +
+            $"&fields[include][]=url" +
+            $"&fields[include][]=country.shortname" +
+            $"&fields[include][]=country.iso3" +
+            $"&fields[include][]=disaster.name" +
+            $"&fields[include][]=disaster.type.name" +
+            $"&fields[include][]=theme.name" +
+            $"&fields[include][]=date.created" +
+            $"&sort[]=date.created:desc" +
+            $"&fields[include][]=source.name" +
+            $"&fields[include][]=source.homepage" +
+            $"&limit={querySize}";
 
         try
         {
-            // Get reports sorted by date
-            var response = await _httpClient.GetAsync($"https://api.reliefweb.int/v1/reports?&query[fields][]=title&query[value]={queryString}&fields[include][]=url&fields[include][]=country.shortname&fields[include][]=country.iso3&fields[include][]=disaster.name&fields[include][]=disaster.type.name&fields[include][]=theme.name&fields[include][]=date.created&sort[]=date.created:desc&fields[include][]=source.name&fields[include][]=source.homepage&limit={querySize}");
-            response.EnsureSuccessStatusCode();
+            // Build the target endpoint for 'Reports' using the provided keywords
+            string reportsEndpoint = BuildReportsEndpoint(queryString);
 
-            string responseBody = await response.Content.ReadAsStringAsync();
+            // Execute query on the reports endpoint
+            string reports = await ExecuteQuery(reportsEndpoint);
 
-            // Fallback query if responseBody is empty
-            if (IsEmptyResult(responseBody) && !queryString.Contains("*"))
+            // Fallback case if response body is empty for a keyword query
+            if (IsEmptyResult(reports) && !queryString.Contains("*"))
             {
-                queryString = "*";
-                response = await _httpClient.GetAsync($"https://api.reliefweb.int/v1/reports?&query[fields][]=title&query[value]={queryString}&fields[include][]=url&fields[include][]=country.shortname&fields[include][]=country.iso3&fields[include][]=disaster.name&fields[include][]=disaster.type.name&fields[include][]=theme.name&fields[include][]=date.created&sort[]=date.created:desc&fields[include][]=source.name&fields[include][]=source.homepage&limit={querySize}");
-                response.EnsureSuccessStatusCode();
-
-                responseBody = await response.Content.ReadAsStringAsync();
+                reports = await ExecuteQuery(BuildReportsEndpoint("*"));
             }
 
-            return responseBody;
+            return reports;
         }
         catch (Exception e)
         {
@@ -57,28 +75,40 @@ public class ReliefWebService
         // Extract and format keywords, set to "*" if none provided
         string queryString = BuildQueryString(keywords);
 
-        // Env max request size or default set by LLM
-        int querySize = _maxRequestSize ?? numResults;
+        // Disasters request size or default
+        int querySize = _disastersRequestSize ?? numResults;
+
+        // String builder for 'Disasters' endpoint
+        string BuildDisastersEndpoint(string query) =>
+            $"https://api.reliefweb.int/v1/disasters?" +
+            $"&query[fields][]=name" +
+            $"&query[value]={query}" +
+            $"&fields[include][]=profile.appeals_response_plans.active" +
+            $"&fields[include][]=profile.useful_links.active" +
+            $"&fields[include][]=glide" +
+            $"&fields[include][]=type.name" +
+            $"&fields[include][]=country.shortname" +
+            $"&fields[include][]=country.iso3" +
+            $"&fields[include][]=date.event" +
+            $"&sort[]=date.event:desc" +
+            $"&fields[include][]=url" +
+            $"&limit={querySize}";
 
         try
         {
-            // Get disasters sorted by date
-            var response = await _httpClient.GetAsync($"https://api.reliefweb.int/v1/disasters?&query[fields][]=name&query[value]={queryString}&fields[include][]=profile.appeals_response_plans.active&fields[include][]=profile.useful_links.active&fields[include][]=glide&fields[include][]=type.name&fields[include][]=country.shortname&fields[include][]=country.iso3&fields[include][]=date.event&sort[]=date.event:desc&fields[include][]=url&limit={querySize}");
-            response.EnsureSuccessStatusCode();
+            // Build the target endpoint for 'Disasters' using the provided keywords
+            string disastersEndpoint = BuildDisastersEndpoint(queryString);
 
-            string responseBody = await response.Content.ReadAsStringAsync();
+            // Execute query on the disasters endpoint
+            string disasters = await ExecuteQuery(disastersEndpoint);
 
-            // Fallback query if responseBody is empty
-            if (IsEmptyResult(responseBody) && !queryString.Contains("*"))
+            // Fallback case if response body is empty for a keyword query
+            if (IsEmptyResult(disasters) && !queryString.Contains("*"))
             {
-                queryString = "*";
-                response = await _httpClient.GetAsync($"https://api.reliefweb.int/v1/disasters?&query[fields][]=name&query[value]={queryString}&fields[include][]=profile.appeals_response_plans.active&fields[include][]=profile.useful_links.active&fields[include][]=glide&fields[include][]=type.name&fields[include][]=country.shortname&fields[include][]=country.iso3&fields[include][]=date.event&sort[]=date.event:desc&fields[include][]=url&limit={querySize}");
-                response.EnsureSuccessStatusCode();
-
-                responseBody = await response.Content.ReadAsStringAsync();
+                disasters = await ExecuteQuery(BuildDisastersEndpoint("*"));
             }
 
-            return responseBody;
+            return disasters;
         }
         catch (Exception e)
         {
@@ -92,28 +122,42 @@ public class ReliefWebService
         // Extract and format keywords, set to "*" if none provided
         string queryString = BuildQueryString(keywords);
 
-        // Env max request size or default set by LLM
-        int querySize = _maxRequestSize ?? numResults;
+        // Jobs request size or default 
+        int querySize = _jobsRequestSize ?? numResults;
+
+        // String builder for 'Jobs' endpoint
+        string BuildJobsEndpoint(string query) =>
+            $"https://api.reliefweb.int/v1/jobs?" +
+            $"&query[fields][]=title" +
+            $"&query[value]={query}" +
+            $"&fields[include][]=country.shortname" +
+            $"&fields[include][]=country.name" +
+            $"&fields[include][]=city.name" +
+            $"&fields[include][]=type.name" +
+            $"&fields[include][]=career_categories.name" +
+            $"&fields[include][]=date.created" +
+            $"&fields[include][]=date.closing" +
+            $"&sort[]=date.created:desc" +
+            $"&fields[include][]=url" +
+            $"&fields[include][]=experience.name" +
+            $"&fields[include][]=how_to_apply" +
+            $"&limit={querySize}";
 
         try
         {
-            // Get jobs using specified keywords
-            var response = await _httpClient.GetAsync($"https://api.reliefweb.int/v1/jobs?&query[fields][]=title&query[value]={queryString}&fields[include][]=country.shortname&fields[include][]=country.name&fields[include][]=city.name&fields[include][]=type.name&fields[include][]=career_categories.name&fields[include][]=body&fields[include][]=date.created&fields[include][]=date.closing&sort[]=date.created:desc&fields[include][]=url&fields[include][]=experience.name&fields[include][]=how_to_apply&limit={querySize}");
-            response.EnsureSuccessStatusCode();
+            // Build the target endpoint for 'Jobs' using the provided keywords
+            string jobsEndpoint = BuildJobsEndpoint(queryString);
 
-            string responseBody = await response.Content.ReadAsStringAsync();
+            // Execute query on the jobs endpoint
+            string jobs = await ExecuteQuery(jobsEndpoint);
 
-            // Fallback query if responseBody is empty
-            if (IsEmptyResult(responseBody) && !queryString.Contains("*"))
+            // Fallback case if response body is empty for a keyword query
+            if (IsEmptyResult(jobs) && !queryString.Contains("*"))
             {
-                queryString = "*";
-                response = await _httpClient.GetAsync($"https://api.reliefweb.int/v1/jobs?&query[fields][]=title&query[value]={queryString}&fields[include][]=country.shortname&fields[include][]=country.name&fields[include][]=city.name&fields[include][]=type.name&fields[include][]=career_categories.name&fields[include][]=body&fields[include][]=date.created&fields[include][]=date.closing&sort[]=date.created:desc&fields[include][]=url&fields[include][]=experience.name&fields[include][]=how_to_apply&limit={querySize}");
-                response.EnsureSuccessStatusCode();
-
-                responseBody = await response.Content.ReadAsStringAsync();
+                jobs = await ExecuteQuery(BuildJobsEndpoint("*"));
             }
 
-            return responseBody;
+            return jobs;
         }
         catch (Exception e)
         {
@@ -127,28 +171,45 @@ public class ReliefWebService
         // Extract and format keywords, set to "*" if none provided
         string queryString = BuildQueryString(keywords);
 
-        // Env max request size or default set by LLM
-        int querySize = _maxRequestSize ?? numResults;
+        // Trainings request size or default
+        int querySize = _trainingsRequestSize ?? numResults;
+
+        // String builder for 'Training' endpoint
+        string BuildTrainingEndpoint(string query) =>
+            $"https://api.reliefweb.int/v1/training?" +
+            $"&query[fields][]=title" +
+            $"&query[value]={query}" +
+            $"&fields[include][]=country.shortname" +
+            $"&fields[include][]=country.iso3" +
+            $"&fields[include][]=city.name" +
+            $"&fields[include][]=career_categories.name" +
+            $"&fields[include][]=cost" +
+            $"&fields[include][]=date.created" +
+            $"&sort[]=date.created:desc" +
+            $"&fields[include][]=how_to_register" +
+            $"&fields[include][]=url" +
+            $"&fields[include][]=training_language.name" +
+            $"&fields[include][]=training_language.code" +
+            $"&fields[include][]=type.name" +
+            $"&fields[include][]=source.name" +
+            $"&fields[include][]=format.name" +
+            $"&limit={querySize}";
 
         try
         {
-            // Get trainings using specified keywords
-            var response = await _httpClient.GetAsync($"https://api.reliefweb.int/v1/training?&query[fields][]=title&query[value]={queryString}&fields[include][]=country.shortname&fields[include][]=country.iso3&fields[include][]=city.name&fields[include][]=career_categories.name&fields[include][]=cost&fields[include][]=date.created&sort[]=date.created:desc&fields[include][]=how_to_register&fields[include][]=url&fields[include][]=training_language.name&fields[include][]=training_language.code&fields[include][]=type.name&fields[include][]=source.name&fields[include][]=format.name&limit={querySize}");
-            response.EnsureSuccessStatusCode();
+            // Build the target endpoint for 'Training' using the provided keywords
+            string trainingEndpoint = BuildTrainingEndpoint(queryString);
 
-            string responseBody = await response.Content.ReadAsStringAsync();
+            // Execute query on the training endpoint
+            string trainings = await ExecuteQuery(trainingEndpoint);
 
-            // Fallback query if responseBody is empty
-            if (IsEmptyResult(responseBody) && !queryString.Contains("*"))
+            // Fallback case if response body is empty for a keyword query
+            if (IsEmptyResult(trainings) && !queryString.Contains("*"))
             {
-                queryString = "*";
-                response = await _httpClient.GetAsync($"https://api.reliefweb.int/v1/training?&query[fields][]=title&query[value]={queryString}&fields[include][]=country.shortname&fields[include][]=country.iso3&fields[include][]=city.name&fields[include][]=career_categories.name&fields[include][]=cost&fields[include][]=date.created&sort[]=date.created:desc&fields[include][]=how_to_register&fields[include][]=url&fields[include][]=training_language.name&fields[include][]=training_language.code&fields[include][]=type.name&fields[include][]=source.name&fields[include][]=format.name&limit={querySize}");
-                response.EnsureSuccessStatusCode();
-
-                responseBody = await response.Content.ReadAsStringAsync();
+                trainings = await ExecuteQuery(BuildTrainingEndpoint("*"));
             }
 
-            return responseBody;
+            return trainings;
         }
         catch (Exception e)
         {
@@ -162,28 +223,36 @@ public class ReliefWebService
         // Extract and format keywords, set to "*" if none provided
         string queryString = BuildQueryString(keywords);
 
-        // Env max request size or default set by LLM
-        int querySize = _maxRequestSize ?? numResults;
+        // Blogs request size or default 
+        int querySize = _blogsRequestSize ?? numResults;
+
+        // String builder for 'Blog' endpoint
+        string BuildBlogsEndpoint(string query) =>
+            $"https://api.reliefweb.int/v1/blog?" +
+            $"&query[fields][]=title" +
+            $"&query[value]={query}" +
+            $"&fields[include][]=author" +
+            $"&fields[include][]=url" +
+            $"&fields[include][]=tags.name" +
+            $"&fields[include][]=date.created" +
+            $"&sort[]=date.created:desc" +
+            $"&limit={querySize}";
 
         try
         {
-            // Get blogs sorted by date using specified keywords
-            var response = await _httpClient.GetAsync($"https://api.reliefweb.int/v1/blog?&query[fields][]=title&query[value]={queryString}&fields[include][]=author&fields[include][]=url&fields[include][]=tags.name&fields[include][]=date.created&sort[]=date.created:desc&limit={querySize}");
-            response.EnsureSuccessStatusCode();
+            // Build the target endpoint for 'Blog' using the provided keywords
+            string blogsEndpoint = BuildBlogsEndpoint(queryString);
 
-            string responseBody = await response.Content.ReadAsStringAsync();
+            // Execute query on the blog endpoint
+            string blogs = await ExecuteQuery(blogsEndpoint);
 
-            // Fallback query if responseBody is empty
-            if (IsEmptyResult(responseBody) && !queryString.Contains("*"))
+            // Fallback case if response body is empty for a keyword query
+            if (IsEmptyResult(blogs) && !queryString.Contains("*"))
             {
-                queryString = "*";
-                response = await _httpClient.GetAsync($"https://api.reliefweb.int/v1/blog?&query[fields][]=title&query[value]={queryString}&fields[include][]=author&fields[include][]=url&fields[include][]=tags.name&fields[include][]=date.created&sort[]=date.created:desc&limit={querySize}");
-                response.EnsureSuccessStatusCode();
-
-                responseBody = await response.Content.ReadAsStringAsync();
+                blogs = await ExecuteQuery(BuildBlogsEndpoint("*"));
             }
 
-            return responseBody;
+            return blogs;
         }
         catch (Exception e)
         {
@@ -197,29 +266,34 @@ public class ReliefWebService
         // Extract and format keywords, set to "*" if none provided
         string queryString = BuildQueryString(keywords);
 
-        // Env max request size or default set by LLM
-        int querySize = _maxRequestSize ?? numResults;
+        // Resources request size or default 
+        int querySize = _resourcesRequestSize ?? numResults;
+
+        // String builder for 'Book' (resources) endpoint
+        string BuildResourcesEndpoint(string query) =>
+            $"https://api.reliefweb.int/v1/book?" +
+            $"&query[fields][]=title" +
+            $"&query[value]={query}" +
+            $"&fields[include][]=url" +
+            $"&fields[include][]=date.created" +
+            $"&sort[]=date.created:desc" +
+            $"&limit={querySize}";
 
         try
         {
-            // Get resources using specified keywords
-            var response = await _httpClient.GetAsync($"https://api.reliefweb.int/v1/book?&query[fields][]=title&query[value]={queryString}&fields[include][]=url&fields[include][]=date.created&sort[]=date.created:desc&limit={querySize}");
-            response.EnsureSuccessStatusCode();
+            // Build the target endpoint for resources using the provided keywords
+            string resourcesEndpoint = BuildResourcesEndpoint(queryString);
 
-            string responseBody = await response.Content.ReadAsStringAsync();
+            // Execute query on the endpoint to obtain resources
+            string resources = await ExecuteQuery(resourcesEndpoint);
 
-            // Fallback query if responseBody is empty
-            if (IsEmptyResult(responseBody) && !queryString.Contains("*"))
+            // Fallback case if response body is empty for a keyword query
+            if (IsEmptyResult(resources) && !queryString.Contains("*"))
             {
-                queryString = "*";
-                response = await _httpClient.GetAsync($"https://api.reliefweb.int/v1/book?&query[fields][]=title&query[value]={queryString}&fields[include][]=url&fields[include][]=date.created&sort[]=date.created:desc&limit={querySize}");
-                response.EnsureSuccessStatusCode();
-
-                responseBody = await response.Content.ReadAsStringAsync();
+                resources = await ExecuteQuery(BuildResourcesEndpoint("*"));
             }
 
-            // Return response
-            return responseBody;
+            return resources;
         }
         catch (Exception e)
         {
@@ -227,11 +301,10 @@ public class ReliefWebService
         }
     }
 
-    // Helper function to determine if a response has content
-    private bool IsEmptyResult(string responseBody)
+    // Helper function to extract a request size for a given environment variable
+    private static int? GetRequestSize(string envVarName)
     {
-        var json = JsonDocument.Parse(responseBody);
-        return json.RootElement.TryGetProperty("data", out var dataProp) && dataProp.GetArrayLength() == 0;
+        return int.TryParse(Environment.GetEnvironmentVariable(envVarName), out var parsed) ? parsed : null;
     }
 
     // Helper function to build a keyword string for API queries
@@ -251,5 +324,24 @@ public class ReliefWebService
         }
 
         return queryString;
+    }
+
+    // Helper function to execute a ReliefWeb API query on a specified endpoint
+    private async Task<string> ExecuteQuery(string endpoint)
+    {
+        // Send GET request to specified endpoint and ensure success code
+        var response = await _httpClient.GetAsync(endpoint);
+        response.EnsureSuccessStatusCode();
+
+        // Read response as a string and return
+        string responseBody = await response.Content.ReadAsStringAsync();
+        return responseBody;
+    }
+
+    // Helper function to determine if a response has content
+    private bool IsEmptyResult(string responseBody)
+    {
+        var json = JsonDocument.Parse(responseBody);
+        return json.RootElement.TryGetProperty("data", out var dataProp) && dataProp.GetArrayLength() == 0;
     }
 }
