@@ -33,7 +33,7 @@ Each result includes: Name of the incident, glide identifier of the incident, co
 When specifying a country keyword, the input should be converted to its 3-letter ISO 3166-1 alpha-3 code for querying.
 If no keywords are provided, a list of jobs sorted by date is provided.
 Each result includes: Title of the opportunity, country of the role, city of the role (if applicable), iso3 code of the role, type of role, career category of the role, date the role application opened, date the role appplication closes, required experience for the role, how to apply for the role, and the ReliefWeb URL for more information on the role.")]
-    public async Task<string> GetJobs(ReliefWebService reliefWebService, [Description("When specifying a country, use 3-letter ISO 3166-1 alpha-3 code")] string[]? keywords = null, int numResults = 20)
+    public async Task<string> GetJobs(ReliefWebService reliefWebService, string[]? keywords = null, int numResults = 20)
     {
         var jobs = await reliefWebService.GetJobs(keywords, numResults);
         return jobs;
