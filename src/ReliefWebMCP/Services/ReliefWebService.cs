@@ -333,7 +333,7 @@ public class ReliefWebService
     }
 
     // Helper function to execute a ReliefWeb API query on a specified endpoint
-    private async Task<string> ExecuteQuery(string endpoint)
+    protected virtual async Task<string> ExecuteQuery(string endpoint)
     {
         // Send GET request to specified endpoint and ensure success code
         var response = await _httpClient.GetAsync(endpoint);

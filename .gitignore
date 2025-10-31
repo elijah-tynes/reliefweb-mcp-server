@@ -1,0 +1,11 @@
+# Ignore npm folders
+npm/
+
+# Ignore build output folders
+src/ReliefWebMCP/bin/
+src/ReliefWebMCP/obj/
+tests/ReliefWebMCPTests/obj/
+tests/ReliefWebMCPTests/bin/
+
+# Ignore client project folders
+ReliefWebMCPClient/
