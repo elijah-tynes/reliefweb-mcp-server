@@ -33,7 +33,7 @@ public class ReliefWebService
         // String builder for the reports endpoint
         string BuildReportsEndpoint(string query) =>
             $"https://api.reliefweb.int/v2/reports?" +
-            $"&appname=ReliefWebMCP" +
+            $"&appname=elijahtynes+reliefwebmcp+awtk--992285" +
             $"&query[fields][]=title" +
             $"&query[value]={query}" +
             $"&fields[include][]=url" +
@@ -82,7 +82,7 @@ public class ReliefWebService
         // String builder for 'Disasters' endpoint
         string BuildDisastersEndpoint(string query) =>
             $"https://api.reliefweb.int/v2/disasters?" +
-            $"&appname=ReliefWebMCP" +
+            $"&appname=elijahtynes+reliefwebmcp+awtk--992285" +
             $"&query[fields][]=name" +
             $"&query[value]={query}" +
             $"&fields[include][]=profile.appeals_response_plans.active" +
@@ -130,7 +130,7 @@ public class ReliefWebService
         // String builder for 'Jobs' endpoint
         string BuildJobsEndpoint(string query) =>
             $"https://api.reliefweb.int/v2/jobs?" +
-            $"&appname=ReliefWebMCP" +
+            $"&appname=elijahtynes+reliefwebmcp+awtk--992285" +
             $"&query[fields][]=title" +
             $"&query[value]={query}" +
             $"&fields[include][]=country.shortname" +
@@ -180,7 +180,7 @@ public class ReliefWebService
         // String builder for 'Training' endpoint
         string BuildTrainingEndpoint(string query) =>
             $"https://api.reliefweb.int/v2/training?" +
-            $"&appname=ReliefWebMCP" +
+            $"&appname=elijahtynes+reliefwebmcp+awtk--992285" +
             $"&query[fields][]=title" +
             $"&query[value]={query}" +
             $"&fields[include][]=country.shortname" +
@@ -233,7 +233,7 @@ public class ReliefWebService
         // String builder for 'Blog' endpoint
         string BuildBlogsEndpoint(string query) =>
             $"https://api.reliefweb.int/v2/blog?" +
-            $"&appname=ReliefWebMCP" +
+            $"&appname=elijahtynes+reliefwebmcp+awtk--992285" +
             $"&query[fields][]=title" +
             $"&query[value]={query}" +
             $"&fields[include][]=author" +
@@ -277,7 +277,7 @@ public class ReliefWebService
         // String builder for 'Book' (resources) endpoint
         string BuildResourcesEndpoint(string query) =>
             $"https://api.reliefweb.int/v2/book?" +
-            $"&appname=ReliefWebMCP" +
+            $"&appname=elijahtynes+reliefwebmcp+awtk--992285" +
             $"&query[fields][]=title" +
             $"&query[value]={query}" +
             $"&fields[include][]=url" +
